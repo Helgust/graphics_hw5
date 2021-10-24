@@ -42,7 +42,9 @@ public:
 
   VkDebugReportCallbackEXT m_debugReportCallback = nullptr;
 private:
-
+  constexpr static uint32_t GROUP_SIZE = 32;
+  constexpr static uint32_t BLOCK_SIZE = GROUP_SIZE*2;
+  
   VkInstance       m_instance       = VK_NULL_HANDLE;
   VkCommandPool    m_commandPool    = VK_NULL_HANDLE;
   VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
@@ -66,11 +68,11 @@ private:
   bool m_enableValidation;
   std::vector<const char*> m_validationLayers;
   std::shared_ptr<vk_utils::ICopyEngine> m_pCopyHelper;
-
-  VkDescriptorSet       m_sumDS; 
+  
+  std::vector<VkDescriptorSet> m_sumDS; 
   VkDescriptorSetLayout m_sumDSLayout = nullptr;
   
-  VkPipeline m_pipeline;
+  std::vector<VkPipeline> m_pipelines;
   VkPipelineLayout m_layout;
 
   VkBuffer m_A, m_B, m_sum;
