@@ -102,11 +102,11 @@ void SimpleCompute::SetupSimplePipeline()
   // Заполнение буферов
   std::vector<float> values(m_length);
   for (uint32_t i = 0; i < values.size(); ++i) {
-    values[i] = i;
+    values[i] = 1;
   }
   m_pCopyHelper->UpdateBuffer(m_A, 0, values.data(), sizeof(float) * values.size());
   for (uint32_t i = 0; i < values.size(); ++i) {
-    values[i] = i * i;
+    values[i] = 1 * 1;
   }
   m_pCopyHelper->UpdateBuffer(m_A, 0, values.data(), sizeof(float) * values.size());
 }
@@ -127,7 +127,7 @@ void SimpleCompute::BuildCommandBufferSimple(VkCommandBuffer a_cmdBuff, VkPipeli
 
   vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(m_length), &m_length);
   
-  vkCmdDispatch(a_cmdBuff, m_length/BLOCK_SIZE, 1, 1);
+  vkCmdDispatch(a_cmdBuff, m_length/BLOCK_SIZE + (m_length % BLOCK_SIZE != 0), 1, 1);
 
   VkBufferMemoryBarrier barrier = {};
   barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -144,15 +144,15 @@ void SimpleCompute::BuildCommandBufferSimple(VkCommandBuffer a_cmdBuff, VkPipeli
 
   vkCmdPushConstants(a_cmdBuff, m_layout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(m_length), &m_length);
   
-  vkCmdDispatch(a_cmdBuff, m_length/BLOCK_SIZE, 1, 1);
+  vkCmdDispatch(a_cmdBuff, m_length/BLOCK_SIZE + (m_length % BLOCK_SIZE != 0), 1, 1);
 
-  barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-  barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-  barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-  barrier.buffer = m_B;
-  barrier.offset = 0;
-  barrier.size = m_length*sizeof(float);
-  vkCmdPipelineBarrier(a_cmdBuff, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,{},0, nullptr,1, &barrier,0, nullptr);
+  // barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+  // barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+  // barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  // barrier.buffer = m_B;
+  // barrier.offset = 0;
+  // barrier.size = m_length*sizeof(float);
+  // vkCmdPipelineBarrier(a_cmdBuff, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,{},0, nullptr,1, &barrier,0, nullptr);
 
 
   VK_CHECK_RESULT(vkEndCommandBuffer(a_cmdBuff));
