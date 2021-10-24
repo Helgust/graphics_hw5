@@ -42,7 +42,7 @@ public:
 
   VkDebugReportCallbackEXT m_debugReportCallback = nullptr;
 private:
-  constexpr static uint32_t GROUP_SIZE = 32;
+  constexpr static uint32_t GROUP_SIZE = 256;
   constexpr static uint32_t BLOCK_SIZE = GROUP_SIZE*2;
   
   VkInstance       m_instance       = VK_NULL_HANDLE;
