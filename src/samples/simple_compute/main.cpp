@@ -2,7 +2,7 @@
 
 int main()
 {
-  constexpr int LENGTH = 256;
+  constexpr int LENGTH = 256*256;
   constexpr int VULKAN_DEVICE_ID = 0;
 
   std::shared_ptr<ICompute> app = std::make_unique<SimpleCompute>(LENGTH);

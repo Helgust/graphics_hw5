@@ -23,8 +23,15 @@ shared float temp[2*GROUP_SIZE];
 
 void main() 
 {
-  uint steps = PushConstant.depth == 0 ? 1 : 2*GROUP_SIZE;
-    
+  uint steps;
+    if(PushConstant.depth == 0 )
+    {
+        steps = 1;
+    }
+    else
+    {
+        steps = 2*GROUP_SIZE;
+    }
     uint idx = gl_LocalInvocationID.x;
     uint buffer_pos = gl_WorkGroupID.x * 2 * GROUP_SIZE + idx;
 
