@@ -9,62 +9,23 @@ layout( push_constant ) uniform params {
   uint depth;
 } PushConstant;
 
-layout(std430, binding = 0) buffer a 
-{
-    float A[];
-};
-
-layout(std430, binding = 1) buffer Sum
+layout(std430, binding = 0) buffer a
 {
     float sum[];
 };
 
-shared float temp[2*GROUP_SIZE];
+layout(std430, binding = 1) buffer Res
+{
+    float res[];
+};
 
 void main() 
 {
-   uint size = GROUP_SIZE*2;
+    uint idx = gl_WorkGroupID.x;
+    uint global_idx = gl_GlobalInvocationID.x;
 
-    uint idx = gl_LocalInvocationID.x;
-    uint buffer_pos = gl_WorkGroupID.x*size + idx;
-
-    temp[idx] = A[buffer_pos];
-    temp[idx + GROUP_SIZE] = A[buffer_pos + GROUP_SIZE];
-
-    if (idx == GROUP_SIZE - 1)
+    if (global_idx < PushConstant.len) 
     {
-        temp[size - 1] = 0;
+        res[global_idx] += sum[idx];
     }
-
-    // group size is REQUIRED to be a power of 2, please remember not to break this...
-    uint offset = 2*GROUP_SIZE;
-
-    for (uint d = 1; d < size; d <<= 1)
-    {
-        offset >>= 1;
-        barrier();
-        if (idx < d)
-        {
-            uint i = offset * (2*idx + 1) - 1;
-            uint j = offset * (2*idx + 2) - 1;
-            float tmp = temp[i];
-            temp[i] = temp[j];
-            temp[j] += tmp;
-        }
-    }
-
-    barrier();
-
-    float groupSubSum;
-    if(PushConstant.depth == 0)
-    {
-        groupSubSum = 0.0;
-    }
-    else
-    {
-        groupSubSum = A[gl_WorkGroupID.x];
-    }
-
-    sum[buffer_pos] = temp[idx] + groupSubSum;
-    sum[buffer_pos + GROUP_SIZE] = temp[idx + GROUP_SIZE] + groupSubSum;
 }

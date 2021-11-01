@@ -42,8 +42,7 @@ public:
 
   VkDebugReportCallbackEXT m_debugReportCallback = nullptr;
 private:
-  constexpr static uint32_t GROUP_SIZE = 256;
-  constexpr static uint32_t BLOCK_SIZE = GROUP_SIZE*2;
+  
   
   VkInstance       m_instance       = VK_NULL_HANDLE;
   VkCommandPool    m_commandPool    = VK_NULL_HANDLE;
@@ -59,7 +58,8 @@ private:
 
   std::shared_ptr<vk_utils::DescriptorMaker> m_pBindings = nullptr;
 
-  uint32_t m_length  = 16u;
+  const uint32_t m_length  = 256*256;
+  const uint32_t GROUP_SIZE = 256;
   
   VkPhysicalDeviceFeatures m_enabledDeviceFeatures = {};
   std::vector<const char*> m_deviceExtensions      = {};
@@ -69,13 +69,21 @@ private:
   std::vector<const char*> m_validationLayers;
   std::shared_ptr<vk_utils::ICopyEngine> m_pCopyHelper;
   
-  std::vector<VkDescriptorSet> m_sumDS; 
+  VkDescriptorSet       m_sumDS; 
   VkDescriptorSetLayout m_sumDSLayout = nullptr;
-  
-  std::vector<VkPipeline> m_pipelines;
-  VkPipelineLayout m_layout;
+ 
+  VkDescriptorSet       m_groupDS;
 
-  VkBuffer m_A, m_B, m_sum;
+  VkDescriptorSet       m_finalDS;
+  VkDescriptorSetLayout m_finalDSLayout = nullptr;
+  
+  VkPipeline m_sumPipeline;
+  VkPipelineLayout m_sumPipelineLayout;
+
+  VkPipeline m_finalPipeline;
+  VkPipelineLayout m_finalPipelineLayout;
+
+  VkBuffer m_A, m_G, m_res;
  
   void CreateInstance();
   void CreateDevice(uint32_t a_deviceId);

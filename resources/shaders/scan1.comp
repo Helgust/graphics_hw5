@@ -4,7 +4,7 @@
 
 layout( local_size_x = GROUP_SIZE ) in;
 
-layout( push_constant ) uniform params {
+layout(push_constant ) uniform params {
   uint len;
   uint depth;
 } PushConstant;
@@ -19,39 +19,69 @@ layout(std430, binding = 1) buffer Sum
     float sum[];
 };
 
-shared float temp[2*GROUP_SIZE];
+layout(std430, binding = 2) buffer Res
+{
+    float res[];
+};
+
+shared float temp_res[GROUP_SIZE];
 
 void main() 
 {
-  uint steps;
-    if(PushConstant.depth == 0 )
+    uint idx = gl_GlobalInvocationID.x;
+    uint groupID = gl_WorkGroupID.x;
+    uint inGroupIDx = gl_LocalInvocationID.x;
+
+    uint blockLength;
+    if((groupID + 1) * GROUP_SIZE > PushConstant.len)
     {
-        steps = 1;
+        blockLength = PushConstant.len - groupID * GROUP_SIZE;
     }
     else
     {
-        steps = 2*GROUP_SIZE;
+         blockLength = GROUP_SIZE;
     }
-    uint idx = gl_LocalInvocationID.x;
-    uint buffer_pos = gl_WorkGroupID.x * 2 * GROUP_SIZE + idx;
 
-    temp[idx] = A[steps - 1 + buffer_pos * steps];
-    temp[idx + GROUP_SIZE] = A[steps - 1 + (buffer_pos + GROUP_SIZE) * steps];
+    if (inGroupIDx < blockLength) 
+    {
+        temp_res[inGroupIDx] = A[idx];
+    }
+    else
+    {
+         temp_res[inGroupIDx] = 0;
+    } 
 
-    uint offset = 1;
-    for (uint d = GROUP_SIZE; d > 0; d >>= 1)
+    for (uint offset = 1; offset <= GROUP_SIZE/2; offset <<= 1) 
     {
         barrier();
-        if (idx < d)
+        if ((inGroupIDx + 1) % (offset*2) == 0)
         {
-            temp[offset * (2*idx + 2) - 1]
-                += temp[offset * (2*idx + 1) - 1];
+            temp_res[inGroupIDx] += temp_res[inGroupIDx - offset];
         }
-        offset <<= 1;
+            
     }
 
     barrier();
+    if(inGroupIDx == GROUP_SIZE - 1)
+    {
+        sum[groupID] = temp_res[inGroupIDx];
+        temp_res[inGroupIDx] = 0;
+    }
 
-    sum[buffer_pos] = temp[idx];
-    sum[buffer_pos + GROUP_SIZE] = temp[idx + GROUP_SIZE];
+    for (uint offset = GROUP_SIZE/2; offset >= 1; offset >>= 1) 
+    {
+        barrier();
+        if ((inGroupIDx + 1) % (offset*2) == 0)
+        {
+            float temp = temp_res[inGroupIDx];
+            temp_res[inGroupIDx] += temp_res[inGroupIDx - offset];
+            temp_res[inGroupIDx - offset] = temp;
+        }
+    }
+    if (inGroupIDx < blockLength)
+    {
+         res[idx] = temp_res[inGroupIDx];
+    }
+       
+
 }
